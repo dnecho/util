@@ -1,13 +1,10 @@
-util
-====
+#ifndef DNECHO_UTIL_H
+#define DNECHO_UTIL_H
 
-some useful function for image process
-
-已加入的函数：
-
-##########################################################################
-#########################   20140724    ##################################
-##########################################################################
+#define bool int
+#define false 0
+#define true 1
+typedef unsigned char BYTE;
 
 //////////////////////////////////////////////////////////////////////////
 //int KeyGrow(unsigned char * p, int w, int h)
@@ -19,6 +16,39 @@ some useful function for image process
 //w:	传入图像的宽
 //h:	传入图像的高
 //////////////////////////////////////////////////////////////////////////
+#define MaxPointNum 20000
+#define REGION_NUM 1000
+extern Region region[REGION_NUM];
+
+typedef struct Region
+{
+	int PointNum;
+	int left;
+	int right;
+	int top;
+	int bottom;
+	int FusedN;
+	int W;
+	int H;
+
+	int LeftTop;
+	int RightTop;
+
+	bool IsOK;
+}Region;
+
+typedef struct CPoint
+{
+	int x;
+	int y;
+}CPoint;
+
+typedef struct RectCenter{
+	double x;
+	double y;
+}RectCenter;
+
+int KeyGrow(unsigned char * p, int w, int h);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -29,7 +59,9 @@ some useful function for image process
 //src:		输入图像src，要求src是灰度图像
 //angle:	需要旋转的角度，要求角度范围为[-90，90]
 //////////////////////////////////////////////////////////////////////////
-
+#define PI 3.1415926535
+#define RADIAN(angle) ((angle)*PI/180.0) //角度到弧度转化的宏
+IplImage * RotateGrayImg(IplImage * src, double angle);
 
 //////////////////////////////////////////////////////////////////////////
 //IplImage* RotateImage_CV(IplImage* img,float degree)
@@ -39,7 +71,7 @@ some useful function for image process
 //src:		输入图像img
 //angle:	需要旋转的角度
 //////////////////////////////////////////////////////////////////////////
-
+IplImage* RotateImage_CV(IplImage* img,float degree);
 
 //////////////////////////////////////////////////////////////////////////
 //void BiFilter(IplImage * src, IplImage * des,int halfL,float delta1,float delta2)
@@ -53,7 +85,7 @@ some useful function for image process
 //delta2:	像素高斯函数的标准差
 //备注：	opencv的cvSmooth函数有双边滤波功能（CV_BILATERAL），双边滤波速度很慢，谨慎使用
 //////////////////////////////////////////////////////////////////////////
-
+void BiFilter(IplImage * src, IplImage * des,int halfL,float delta1,float delta2);
 
 //////////////////////////////////////////////////////////////////////////
 //IplImage* filterSigleChannel(IplImage* pSrc, char chn, int RTh, int GTh, int BTh)
@@ -66,3 +98,7 @@ some useful function for image process
 //Gth:		绿色通道阈值
 //Bth:		蓝色通道阈值
 //////////////////////////////////////////////////////////////////////////
+IplImage* filterSigleChannel(IplImage* pSrc, char chn, int RTh, int GTh, int BTh);
+
+
+#endif
