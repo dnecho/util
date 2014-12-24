@@ -1,10 +1,11 @@
+#include "stdafx.h"
 #include "util.h"
 
 //////////////////////////////////////////////////////////////////////////
 //int KeyGrow(unsigned char * p, int w, int h)
 //////////////////////////////////////////////////////////////////////////
 Region region[REGION_NUM];
-int KeyGrow(unsigned char * p, int w, int h)
+int KeyGrow(unsigned char * p, int w, int h, int* typeImg)
 {
 	int LineSize;
 	unsigned char DealPixel;
@@ -26,14 +27,7 @@ int KeyGrow(unsigned char * p, int w, int h)
 	imgcopy=(int*)malloc(sizeof(int)*LineSize*h);
 	memset(imgcopy,0,sizeof(int)*LineSize*h);
 
-	int* typeImg=(int*)malloc(sizeof(int)*height*width);
-	for(int i=0;i<height;i++)
-	{
-		for(int j=0;j<width;j++)
-		{
-			typeImg[i*width+j]=-1;
-		}
-	}
+
 	//类别的小标
 	N=-1;
 	//int nLEFT,nRight,nTOP,nBOTTOM;
@@ -258,7 +252,6 @@ int KeyGrow(unsigned char * p, int w, int h)
 	}
 
 	free(imgcopy);
-	free(typeImg);
 
 	return ++N;
 }
@@ -415,18 +408,18 @@ void BiFilter(IplImage * src, IplImage * des,int halfL,float delta1,float delta2
 	{
 		for (j=-halfL;j<=halfL;j++)
 		{
-			gaussW[(i+halfL)*L+(j+halfL)]=1/sqrt(2*3.1415926*delta1)*pow(2.718281828,-1.0*(i*i+j*j)/(2*delta1));
+			gaussW[(i+halfL)*L+(j+halfL)]=(float)(1/sqrt(2*3.1415926*delta1)*pow(2.718281828,-1.0*(i*i+j*j)/(2*delta1)));
 		}
 	}
 
 	float * gaussPix=new float[256];
 	for (j=0;j<256;j++)
 	{
-		gaussPix[j]=1/sqrt(2*3.1415926*delta2)*pow(2.718281828,-1.0*j*j/(2*delta2));
+		gaussPix[j]=(float)(1/sqrt(2*3.1415926*delta2)*pow(2.718281828,-1.0*j*j/(2*delta2)));
 	}
 
 	//开始模糊
-	float wt,pixV,weightsum,temp;
+	float pixV,weightsum;
 	for (i=0;i<height;i++)
 	{
 		for (j=0;j<width;j++)
@@ -453,7 +446,7 @@ void BiFilter(IplImage * src, IplImage * des,int halfL,float delta1,float delta2
 					}
 				}
 
-				des->imageData[i*des->widthStep+j*des->nChannels+mm]=(pixV+1e-6)/(weightsum+1e-6);
+				des->imageData[i*des->widthStep+j*des->nChannels+mm]=(char)((pixV+1e-6)/(weightsum+1e-6));
 			}
 		}
 	}
@@ -526,3 +519,183 @@ IplImage* filterSigleChannel(IplImage* pSrc, char chn, int RTh, int GTh, int BTh
 	return pTemp;
 }
 
+void myShowImg(char* win_name, IplImage* pSrc)
+{
+	cvNamedWindow(win_name, 0);
+	cvShowImage(win_name, pSrc);
+}
+
+//多通道图像高斯平滑
+void MyGaussian(unsigned char *pSrcData, unsigned char *pDesData, int Width, int Height)
+{
+	int small_gaussian[4][4] =
+	{
+		{1024}, 
+		{512, 256}, 
+		{384 , 256, 64},
+		{288, 224, 112, 32}
+	};
+
+	int i,j,k,m;
+	//int Width=pSrc->width;
+	//int Height=pSrc->height;
+	int nCh=1;
+	int widestep=(Width+3)/4*4;
+	memcpy(pDesData, pSrcData, sizeof(unsigned char)*Height*widestep);
+	unsigned char * Data=pSrcData;	
+	unsigned char * sData;
+	int SmoothRadio=3;
+	int pos,rpos;
+	int Temp;
+	int *  pGauTepData=NULL;
+	unsigned char * rfilter;
+
+	//根据SMOOTHRADIO判断是哪个数组
+	if (SmoothRadio==1)
+	{
+		pGauTepData=small_gaussian[1];
+	}
+	else if(SmoothRadio==2)
+	{
+		pGauTepData=small_gaussian[2];
+	}
+	else if(SmoothRadio==3)
+	{
+		pGauTepData=small_gaussian[3];
+	}
+	else
+	{
+
+	}
+
+	//rfilter=(unsigned char*)malloc(sizeof(unsigned char)*Width*Height);
+	rfilter = new unsigned char[sizeof(unsigned char)*widestep*Height];
+	sData=rfilter;
+	//行滤波
+	pos=0;
+	rpos=0;
+	for (i=0;i<Height;i++)
+	{
+		for (j=3;j<Width-3;j++)
+		{
+			rpos=pos+j*nCh;
+			for (m=0;m<nCh;m++)
+			{
+				Temp=Data[rpos+m]*pGauTepData[0];
+				for (k=1;k<=SmoothRadio;k++)
+				{
+					Temp+=(Data[rpos+m-k*nCh]+Data[rpos+m+k*nCh])*pGauTepData[k];
+				}
+
+				sData[rpos+m]=Temp>>10;
+			}
+		}
+		pos+=widestep;
+	}
+
+	sData=pDesData;
+	Data=rfilter;
+	pos=3*widestep;
+	rpos=0;
+	for (i=3;i<Height-3;i++)
+	{
+		for (j=3;j<Width-3;j++)
+		{
+			rpos=pos+j*nCh;
+			for (m=0;m<nCh;m++)
+			{
+				Temp=Data[rpos+m]*pGauTepData[0];
+				for (k=1;k<=SmoothRadio;k++)
+				{
+					Temp+=(Data[rpos+m-k*widestep]+Data[rpos+m+k*widestep])*pGauTepData[k];
+				}
+
+				sData[rpos+m]=Temp>>10;
+			}
+		}
+		pos+=widestep;
+	}
+
+	delete []rfilter;
+	//free(rfilter);
+}
+
+void adaptiveThreshold_C(unsigned char* pSrcData, int IMAGE_WIDTH, int IMAGE_HEIGHT, int IMAGE_WIDESTEP, unsigned char* pDesData, int S, double T)
+{
+	unsigned long* integralImg = 0;
+	int i, j;
+	long sum=0;
+	int count=0;
+	int index;
+	int x1, y1, x2, y2;
+	int s2 = S/2;
+	//t_start = clock();
+	// create the integral image
+	integralImg = (unsigned long*)malloc(IMAGE_WIDESTEP*IMAGE_HEIGHT*sizeof(unsigned long));
+	memset(integralImg,0,sizeof(unsigned long*)*IMAGE_WIDESTEP*IMAGE_HEIGHT);
+
+	for (i=0; i<IMAGE_WIDTH; i++)
+	{
+		// reset this column sum
+		sum = 0;
+
+		for (j=0; j<IMAGE_HEIGHT; j++)
+		{
+			index = j*IMAGE_WIDESTEP+i;
+
+			sum += pSrcData[index];
+			if (i==0)
+				integralImg[index] = sum;
+			else
+				integralImg[index] = integralImg[index-1] + sum;
+		}
+	}
+	/*t_end = clock();
+	printf("integralImg:%d\n", t_end-t_start);
+	t_start = clock();*/
+	// perform thresholding
+	for (i=0; i<IMAGE_WIDTH; i++)
+	{
+		for (j=0; j<IMAGE_HEIGHT; j++)
+		{
+			index = j*IMAGE_WIDESTEP+i;
+
+			// set the SxS region
+			x1=i-s2; x2=i+s2;
+			y1=j-s2; y2=j+s2;
+
+			// check the border
+			if (x1 < 0) x1 = 0;
+			if (x2 >= IMAGE_WIDTH) x2 = IMAGE_WIDTH-1;
+			if (y1 < 0) y1 = 0;
+			if (y2 >= IMAGE_HEIGHT) y2 = IMAGE_HEIGHT-1;
+
+			count = (x2-x1)*(y2-y1);
+
+			// I(x,y)=s(x2,y2)-s(x1,y2)-s(x2,y1)+s(x1,x1)
+			sum = integralImg[y2*IMAGE_WIDESTEP+x2] -
+				integralImg[y1*IMAGE_WIDESTEP+x2] -
+				integralImg[y2*IMAGE_WIDESTEP+x1] +
+				integralImg[y1*IMAGE_WIDESTEP+x1];
+
+			if ((long)(pSrcData[index]*count) < (long)(sum*(1.0-T)))
+				pDesData[index] = 0;
+			else
+				pDesData[index] = 255;
+		}
+	}
+	
+	free (integralImg);
+	//t_end = clock();
+	//printf("Threshold:%d\n", t_end-t_start);
+}
+
+void testImg(unsigned char* pData,int width, int height, int widthStep, char* win_name)
+{
+	IplImage* pImg = cvCreateImageHeader(cvSize(width,height), 8, 1);
+	cvSetData(pImg, pData, widthStep);
+	cvNamedWindow(win_name, 0);
+	cvShowImage(win_name, pImg);
+	cvWaitKey();
+	cvReleaseImageHeader(&pImg);
+}

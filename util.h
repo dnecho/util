@@ -1,13 +1,10 @@
 #ifndef DNECHO_UTIL_H
 #define DNECHO_UTIL_H
 
-#define bool int
-#define false 0
-#define true 1
 typedef unsigned char BYTE;
 
 //////////////////////////////////////////////////////////////////////////
-//int KeyGrow(unsigned char * p, int w, int h)
+//int KeyGrow(unsigned char * p, int w, int h, int* typeImg)
 //函数用途：
 //			查找图像连通区域，并记录连通区域相关信息，储存在Region region[REGION_NUM]中
 //			返回找到的连通区域个数
@@ -15,10 +12,17 @@ typedef unsigned char BYTE;
 //p:	传入图像（opencv）的ImageData，要求该图像为二值图像，并且目标区域为黑点（像素值为0）
 //w:	传入图像的宽
 //h:	传入图像的高
+//typeImg:
+//int* typeImg=(int*)malloc(sizeof(int)*h*w);
+//for(int i=0;i<h;i++)
+//{
+//	for(int j=0;j<w;j++)
+//	{
+//		typeImg[i*w+j]=-1;
+//	}
+//}
 //////////////////////////////////////////////////////////////////////////
-#define MaxPointNum 20000
-#define REGION_NUM 1000
-extern Region region[REGION_NUM];
+
 
 typedef struct Region
 {
@@ -37,6 +41,10 @@ typedef struct Region
 	bool IsOK;
 }Region;
 
+#define MaxPointNum 20000
+#define REGION_NUM 3000
+extern Region region[REGION_NUM];
+
 typedef struct CPoint
 {
 	int x;
@@ -48,7 +56,7 @@ typedef struct RectCenter{
 	double y;
 }RectCenter;
 
-int KeyGrow(unsigned char * p, int w, int h);
+int KeyGrow(unsigned char * p, int w, int h, int* typeImg);
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -100,5 +108,52 @@ void BiFilter(IplImage * src, IplImage * des,int halfL,float delta1,float delta2
 //////////////////////////////////////////////////////////////////////////
 IplImage* filterSigleChannel(IplImage* pSrc, char chn, int RTh, int GTh, int BTh);
 
+//////////////////////////////////////////////////////////////////////////
+//void myShowImg(char* win_name, IplImage* pSrc);
+//函数用途：
+//			快捷显示图片
+//参数说明：
+//win_name:	窗口名字
+//pSrc：	源图像
+//////////////////////////////////////////////////////////////////////////
+void myShowImg(char* win_name, IplImage* pSrc);
 
+//////////////////////////////////////////////////////////////////////////
+//void MyGaussian(unsigned char *pSrcData, unsigned char *pDesData, int Width, int Height);
+//函数用途：
+//			高斯滤波
+//参数说明：
+//pSrcData:	源图像像素数据（内部已经根据Width处理了widthStep）
+//pDesData：滤波后图像像素数据
+//Width：	源图像宽度
+//Height:	源图像高度
+//////////////////////////////////////////////////////////////////////////
+void MyGaussian(unsigned char *pSrcData, unsigned char *pDesData, int Width, int Height);
+
+//////////////////////////////////////////////////////////////////////////
+//void adaptiveThreshold_C(unsigned char* input, int IMAGE_WIDTH, int IMAGE_HEIGHT, int IMAGE_WIDESTEP, unsigned char* bin);
+//函数用途：
+//			自适应阈值分割
+//参数说明：
+//pSrcData:	源图像像素数据
+//pDesData：滤波后图像像素数据
+//IMAGE_WIDTH：	源图像宽度
+//IMAGE_HEIGHT:	源图像高度
+//IMAGE_WIDESTEP:	源图像步长
+//S:	自适应阈值分割半径
+//////////////////////////////////////////////////////////////////////////
+void adaptiveThreshold_C(unsigned char* pSrcData, int IMAGE_WIDTH, int IMAGE_HEIGHT, int IMAGE_WIDESTEP, unsigned char* pDesData, int S=15, double T=0.15);
+
+//////////////////////////////////////////////////////////////////////////
+//void testImg(unsigned char* pData,int width, int height, int widthStep, char* win_name);
+//函数用途：
+//			显示pData对应的图像
+//参数说明：
+//pData:	图像像素数据
+//width：	图像宽度
+//height：	图像高度
+//widthStep:	图像步长
+//win_name:	显示窗口名字
+//////////////////////////////////////////////////////////////////////////
+void testImg(unsigned char* pData,int width, int height, int widthStep, char* win_name);
 #endif
