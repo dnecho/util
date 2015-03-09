@@ -519,13 +519,20 @@ IplImage* filterSigleChannel(IplImage* pSrc, char chn, int RTh, int GTh, int BTh
 	return pTemp;
 }
 
+//////////////////////////////////////////////////////////////////////////
+//void myShowImg(char* win_name, IplImage* pSrc)
+//////////////////////////////////////////////////////////////////////////
 void myShowImg(char* win_name, IplImage* pSrc)
 {
 	cvNamedWindow(win_name, 0);
 	cvShowImage(win_name, pSrc);
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+//void MyGaussian(unsigned char *pSrcData, unsigned char *pDesData, int Width, int Height)
 //多通道图像高斯平滑
+//////////////////////////////////////////////////////////////////////////
 void MyGaussian(unsigned char *pSrcData, unsigned char *pDesData, int Width, int Height)
 {
 	int small_gaussian[4][4] =
@@ -620,6 +627,8 @@ void MyGaussian(unsigned char *pSrcData, unsigned char *pDesData, int Width, int
 	//free(rfilter);
 }
 
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 void adaptiveThreshold_C(unsigned char* pSrcData, int IMAGE_WIDTH, int IMAGE_HEIGHT, int IMAGE_WIDESTEP, unsigned char* pDesData, int S, double T)
 {
 	unsigned long* integralImg = 0;
@@ -690,6 +699,9 @@ void adaptiveThreshold_C(unsigned char* pSrcData, int IMAGE_WIDTH, int IMAGE_HEI
 	//printf("Threshold:%d\n", t_end-t_start);
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 void testImg(unsigned char* pData,int width, int height, int widthStep, char* win_name)
 {
 	IplImage* pImg = cvCreateImageHeader(cvSize(width,height), 8, 1);
@@ -698,4 +710,87 @@ void testImg(unsigned char* pData,int width, int height, int widthStep, char* wi
 	cvShowImage(win_name, pImg);
 	cvWaitKey();
 	cvReleaseImageHeader(&pImg);
+}
+
+//////////////////////////////////////////////////////////////////////////
+//int GetFileNameFromDir(char* _dir, char** filename, int filenum, char* suffix)
+//////////////////////////////////////////////////////////////////////////
+int GetFileNameFromDir(char* _dir, char** filename, int filenum, char* suffix)
+{
+	int num = 0;
+	int len=strlen(_dir);
+	char dir[255];
+	if(dir[len - 1] != '\\')
+		sprintf_s(dir, "%s\\",_dir);
+	else
+		strcpy_s(dir, _dir);
+	_finddata_t file;
+	long longf;
+	char tep_char[255];
+
+	//得到需要查找的路径及需要查找文件的类型（是否指定后缀名）
+	if(suffix == NULL)//判断是否需要制定文件后缀
+	{
+		sprintf_s(tep_char, "%s*.*", dir);
+	}
+	else
+	{		
+		sprintf_s(tep_char, "%s*.%s", dir, suffix);
+	}
+
+	//_findfirst返回的是long型; long __cdecl _findfirst(const char *, struct _finddata_t *)
+	if((longf = _findfirst(tep_char, &file))==-1l)
+	{
+		printf("文件没有找到!\n");
+	}
+	else
+	{
+		if (file.name[0] != '.')//当后缀是"null"时findfirst找到的是'.'；如果后缀有值是找到的是第一个对应后缀的文件，必须保存起来
+		{
+			sprintf_s(tep_char, "%s%s", dir, file.name);//将路径与文件名结合
+			strcpy_s(filename[num], 255, tep_char);
+			num++;
+		}
+
+		//int __cdecl _findnext(long, struct _finddata_t *);如果找到下个文件的名字成功的话就返回0,否则返回-1
+		while( _findnext( longf, &file ) == 0 && num <filenum)
+		{
+			if (file.name[0] == '.' && file.name[1] == '.')
+			{
+				continue;
+			}
+			sprintf_s(tep_char, "%s%s", dir, file.name);//将路径与文件名结合
+			strcpy_s(filename[num], 255, tep_char);
+			num++;
+		}
+	}
+
+	_findclose(longf);
+	return num;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//void myRGB2YCrCb(unsigned char* pSrcData,int width, int height, int widthstep, uchar* Y, uchar* Cr, uchar* Cb)
+//////////////////////////////////////////////////////////////////////////
+void myRGB2YCrCb(unsigned char* pSrcData,int width, int height, int widthstep, uchar* Y, uchar* Cr, uchar* Cb)
+{
+	int R,G,B,tmp;
+	unsigned char* Y_tmp = Y;
+	unsigned char* Cb_tmp = Cb;
+	unsigned char* Cr_tmp = Cr;
+	for(int i=0; i<height; i++)
+	{
+		unsigned char* pRowData = pSrcData+i*widthstep;
+
+		for(int j=0; j<width; j++)
+		{
+			B = *pRowData++;
+			G = *pRowData++;
+			R = *pRowData++;
+
+			*Y_tmp++ = 0.299*R+0.587*G+0.114*B;
+			*Cb_tmp++ = (-0.168*R - 0.3313*G + 0.5*B)+128;
+			*Cr_tmp++ = (0.5*R -0.4187*G -0.0813*B)+128;
+		}
+	}
 }

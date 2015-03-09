@@ -156,4 +156,29 @@ void adaptiveThreshold_C(unsigned char* pSrcData, int IMAGE_WIDTH, int IMAGE_HEI
 //win_name:	显示窗口名字
 //////////////////////////////////////////////////////////////////////////
 void testImg(unsigned char* pData,int width, int height, int widthStep, char* win_name);
+
+//////////////////////////////////////////////////////////////////////////
+//函数用途：
+//			获得指定目录下指定后缀的文件数量以及文件路径
+//参数说明：
+//dir:		文件目录最后不要求为\\，如"E:\\face"
+//filename:	文件名字，包含目录，可直接用于打开文件
+//filenum:	希望从目录中得到的文件数量
+//suffix:	希望得到文件的后缀，如jpg，bmp（注意不用加.），默认为空，为空时不指定文件后缀名
+//函数返回值：
+//			表示实际得到的文件数量
+//////////////////////////////////////////////////////////////////////////
+int GetFileNameFromDir(char* _dir, char** filename, int filenum, char* suffix);
+
+//////////////////////////////////////////////////////////////////////////
+//函数用途：
+//				将RGB图像转换为YCrCb图像
+//参数说明：
+//pSrcData：	RGB源图像，图像按opencv读入图像时的存贮格式，即BGR顺序
+//width:		图像宽度
+//height：		图像高度
+//widthstep:	图像步长
+//Y,Cr,Cb:		转换后Y,Cb,Cr通道数值
+void myRGB2YCrCb(unsigned char* pSrcData,int width, int height, int widthstep, uchar* Y, uchar* Cr, uchar* Cb);
+
 #endif
