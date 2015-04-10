@@ -701,12 +701,14 @@ void adaptiveThreshold_C(unsigned char* pSrcData, int IMAGE_WIDTH, int IMAGE_HEI
 
 
 //////////////////////////////////////////////////////////////////////////
+//void testImg(unsigned char* pData,int width, int height, int nch, char* win_name)
 //////////////////////////////////////////////////////////////////////////
-void testImg(unsigned char* pData,int width, int height, int widthStep, char* win_name)
+void testImg(unsigned char* pData,int width, int height, int nch, char* win_name)
 {
-	IplImage* pImg = cvCreateImageHeader(cvSize(width,height), 8, 1);
+	int widthStep =(width*nch+3)/4*4;
+	IplImage* pImg = cvCreateImageHeader(cvSize(width,height), 8, nch);
 	cvSetData(pImg, pData, widthStep);
-	cvNamedWindow(win_name, 0);
+	cvNamedWindow(win_name, 1);
 	cvShowImage(win_name, pImg);
 	cvWaitKey();
 	cvReleaseImageHeader(&pImg);

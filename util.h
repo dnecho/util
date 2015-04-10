@@ -152,10 +152,10 @@ void adaptiveThreshold_C(unsigned char* pSrcData, int IMAGE_WIDTH, int IMAGE_HEI
 //pData:	图像像素数据
 //width：	图像宽度
 //height：	图像高度
-//widthStep:	图像步长
+//nch:		图像通道数
 //win_name:	显示窗口名字
 //////////////////////////////////////////////////////////////////////////
-void testImg(unsigned char* pData,int width, int height, int widthStep, char* win_name);
+void testImg(unsigned char* pData,int width, int height, int nch, char* win_name);
 
 //////////////////////////////////////////////////////////////////////////
 //函数用途：
