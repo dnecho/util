@@ -794,3 +794,59 @@ void myRGB2YCrCb(unsigned char* pSrcData,int width, int height, int widthstep, u
 		}
 	}
 }
+
+//设置为白色图像
+void FillWhite(IplImage *pImage)
+{  
+	cvRectangle(pImage, cvPoint(0, 0), cvPoint(pImage->width, pImage->height), CV_RGB(255, 255, 255), CV_FILLED);  
+}
+
+// 创建灰度图像的直方图  
+CvHistogram* CreateGrayImageHist(IplImage **ppImage)  
+{  
+	int nHistSize = 256;  
+	float fRange[] = {0, 255};  //灰度级的范围    
+	float *pfRanges[] = {fRange};    
+	CvHistogram *pcvHistogram = cvCreateHist(1, &nHistSize, CV_HIST_ARRAY, pfRanges);  
+	cvCalcHist(ppImage, pcvHistogram);  
+	return pcvHistogram;  
+}
+
+// 根据直方图创建直方图图像  
+IplImage* CreateHisogramImage(int nImageWidth, int nScale, int nImageHeight, CvHistogram *pcvHistogram)  
+{  
+	IplImage *pHistImage = cvCreateImage(cvSize(nImageWidth * nScale, nImageHeight), IPL_DEPTH_8U, 1);  
+	FillWhite(pHistImage);  
+
+	//统计直方图中的最大直方块  
+	float fMaxHistValue = 0;  
+	int maxId = 0;
+	cvGetMinMaxHistValue(pcvHistogram, NULL, &fMaxHistValue, NULL, &maxId);  
+	cout<<"maxId:"<<maxId<<"\t";
+	//分别将每个直方块的值绘制到图中  
+	int i;
+	for(i = 0; i < nImageWidth; i++)  
+	{  
+		float fHistValue = cvQueryHistValue_1D(pcvHistogram, i); //像素为i的直方块大小  
+		int nRealHeight = cvRound((fHistValue / fMaxHistValue) * nImageHeight);  //要绘制的高度  
+		cvRectangle(pHistImage,  
+			cvPoint(i * nScale, nImageHeight - 1),  
+			cvPoint((i + 1) * nScale - 1, nImageHeight - nRealHeight),  
+			cvScalar(i, 0, 0, 0),   
+			CV_FILLED  
+			);   
+	}  
+	return pHistImage;  
+}  
+
+//展示直方图结果
+void showHist(IplImage* pSrc, char* win_name)
+{
+	CvHistogram *pcvHistogram = CreateGrayImageHist(&pSrc);
+	int nHistImageWidth = 255;  
+	int nHistImageHeight = 150;  //直方图图像高度  
+	int nScale = 2;   
+	IplImage *pHistImage = CreateHisogramImage(nHistImageWidth, nScale, nHistImageHeight, pcvHistogram);  
+	cvNamedWindow(win_name, 1);
+	cvShowImage(win_name, pHistImage);
+}

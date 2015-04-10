@@ -179,6 +179,16 @@ int GetFileNameFromDir(char* _dir, char** filename, int filenum, char* suffix);
 //height：		图像高度
 //widthstep:	图像步长
 //Y,Cr,Cb:		转换后Y,Cb,Cr通道数值
+//////////////////////////////////////////////////////////////////////////
 void myRGB2YCrCb(unsigned char* pSrcData,int width, int height, int widthstep, uchar* Y, uchar* Cr, uchar* Cb);
 
+
+//////////////////////////////////////////////////////////////////////////
+//函数用途：
+//				用柱状图展示源图像的直方图
+//参数说明：
+//pSrc：		源图像（必须为单通道，深度depth为8）
+//win_name:		显示图像的标题
+//////////////////////////////////////////////////////////////////////////
+void showHist(IplImage* pSrc, char* win_name);
 #endif
